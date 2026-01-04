@@ -1,11 +1,15 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const { initSession, readSession, saveSession } = require('./app/session/save');
 const { startPresence, setSearching, setListening } = require('./app/discord/presence');
-const { createTray } = require('./app/ui/tray');
+const { createTray } = require('./app/functions/tray');
+const { registerShortcuts } = require('./app/media/shortcuts');
+const { injectCleaner } = require('./app/functions/ads');
 const path = require('path');
 
+let win;
+
 function createWindow() {
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 1200,
     height: 800,
     title: 'SoundCloud',
@@ -29,11 +33,11 @@ function createWindow() {
       event.preventDefault();
       const choice = dialog.showMessageBoxSync(win, {
         type: 'question',
-        buttons: ['Minimize', 'Close', 'Cancel'],
+        buttons: ['Minimizar', 'Cerrar', 'Cancelar'],
         defaultId: 0,
         cancelId: 2,
         title: 'SoundCloud',
-        message: 'Select an action:',
+        message: '¿Qué deseas hacer?'
       });
 
       if (choice === 0) {
@@ -46,6 +50,8 @@ function createWindow() {
   });
 
   createTray(win, app);
+  registerShortcuts(win);
+  injectCleaner(win);
 }
 
 ipcMain.on('sc:searching', () => {
@@ -71,4 +77,9 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('will-quit', () => {
+  const { globalShortcut } = require('electron');
+  globalShortcut.unregisterAll();
 });
