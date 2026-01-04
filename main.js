@@ -1,18 +1,25 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, nativeImage } = require('electron');
 const { initSession, readSession, saveSession } = require('./app/session/save');
 const { startPresence, setSearching, setListening } = require('./app/discord/presence');
 const { createTray } = require('./app/functions/tray');
 const { registerShortcuts } = require('./app/media/shortcuts');
-const { injectCleaner } = require('./app/functions/ads');
+const { injectCleaner } = require('./plugins/adblocker');
+const { checkUpdates } = require('./plugins/updateChecker');
 const path = require('path');
 
 let win;
+
+app.setAppUserModelId('com.soundcloud.desktop');
+
+const iconPath = path.resolve(__dirname, './app/assets/favicon.png');
+const icon = nativeImage.createFromPath(iconPath);
 
 function createWindow() {
   win = new BrowserWindow({
     width: 1200,
     height: 800,
     title: 'SoundCloud',
+    icon: iconPath,
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -20,6 +27,8 @@ function createWindow() {
       nodeIntegration: false,
     }
   });
+
+  win.setIcon(icon);
 
   win.loadURL('https://soundcloud.com');
 
@@ -31,13 +40,14 @@ function createWindow() {
   win.on('close', (event) => {
     if (!app.isQuiting) {
       event.preventDefault();
+
       const choice = dialog.showMessageBoxSync(win, {
         type: 'question',
-        buttons: ['Minimizar', 'Cerrar', 'Cancelar'],
+        buttons: ['Minimize', 'Close', 'Cancel'],
         defaultId: 0,
         cancelId: 2,
         title: 'SoundCloud',
-        message: '¿Qué deseas hacer?'
+        message: 'Select an action:',
       });
 
       if (choice === 0) {
@@ -49,9 +59,25 @@ function createWindow() {
     }
   });
 
-  createTray(win, app);
+  win.webContents.on('did-finish-load', () => {
+    checkUpdates(win);
+  });
+
+  createTray(win, app, iconPath);
   registerShortcuts(win);
   injectCleaner(win);
+}
+
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (win) {
+      if (win.isMinimized()) win.restore();
+      win.show();
+      win.focus();
+    }
+  });
 }
 
 ipcMain.on('sc:searching', () => {

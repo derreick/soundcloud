@@ -4,17 +4,17 @@ const path = require('path');
 let tray = null;
 
 function createTray(win, app) {
-    const iconPath = path.join(__dirname, '../../assets/favicon.png');
+    const iconPath = path.join(__dirname, '../assets/favicon.png');
     tray = new Tray(iconPath);
 
     const contextMenu = Menu.buildFromTemplate([
         { 
-            label: 'Mostrar SoundCloud', 
+            label: 'Show App', 
             click: () => win.show() 
         },
         { type: 'separator' },
         { 
-            label: 'Salir', 
+            label: 'Exit', 
             click: () => {
                 app.isQuiting = true;
                 app.quit();

@@ -3,18 +3,41 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron .",
+    "build": "electron-builder"
   },
-  "keywords": [],
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/derreick/soundcloud.git"
+  },
+  "author": "derreick",
   "license": "ISC",
-  "description": "",
+  "description": "SoundCloud Desktop with Discord RPC and AdBlocker",
   "devDependencies": {
-    "electron": "^39.2.7"
+    "electron": "^39.2.7",
+    "electron-builder": "^25.1.8"
   },
   "dependencies": {
     "discord-rpc": "^4.0.1",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.6.2"
+  },
+  "build": {
+    "appId": "com.derreick.soundcloud",
+    "productName": "SoundCloud",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/favicon.webp"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "derreick",
+        "repo": "soundcloud"
+      }
+    ]
   }
 }
